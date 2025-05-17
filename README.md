@@ -28,7 +28,7 @@ This project was developed as a submission for the CodeCiruit Hackathon by Outli
 ## 🚀 How to Run Locally / View the Project
 
 1.  **Live Demo:**
-    *   You can view the live deployed version here: [Link to your GitHub Pages URL - **ADD THIS LATER AFTER DEPLOYING**]
+    *   You can view the live deployed version here: https://Aksh2758.github.io/mood-tracker/
 
 2.  **Running from Source Code:**
     *   Clone the repository: `git clone https://github.com/Aksh2758/mood-tracker.git`
