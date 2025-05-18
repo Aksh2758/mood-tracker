@@ -6,12 +6,12 @@
   <title>Mood Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css" />
-    
 </head>
-<body class="bg-gray-100 min-h-screen p-5 flex flex-col items-center scroll-smooth">
+<body class="bg-gray-100 min-h-screen p-5 flex flex-col items-center justify-center scroll-smooth">
 
   <h1 class="text-4xl font-extrabold text-blue-600 select-none mb-2">Mood Tracker</h1>
 
+  <!--  Mood Input Section -->
   <section id="day-input-section" aria-label="Input today's mood" class="bg-white rounded-3xl p-8 shadow-lg w-full max-w-xl mb-10">
     <p class="text-xl font-semibold text-gray-800 mb-6 text-center select-none">How was your day today? Select your mood:</p>
     <div class="flex justify-center gap-6 flex-wrap select-none" aria-label="Mood selection for today">
@@ -21,39 +21,51 @@
       <button class="mood-btn text-6xl bg-white rounded-xl border-4 border-transparent shadow-md p-2 cursor-pointer transition hover:border-blue-500 hover:shadow-lg" data-mood="2" title="Neutral" aria-pressed="false" aria-label="Neutral mood emoji 😐">😐</button>
       <button class="mood-btn text-6xl bg-white rounded-xl border-4 border-transparent shadow-md p-2 cursor-pointer transition hover:border-blue-500 hover:shadow-lg" data-mood="4" title="Excited" aria-pressed="false" aria-label="Excited mood emoji 🤩">🤩</button>
     </div>
-    <button id="go-to-calendar-btn" disabled class="mt-8 mx-auto block px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold text-lg cursor-pointer disabled:bg-blue-300 transition select-none">Go to Calendar</button>
+    <!--  Buttons  -->
+    <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+        <button id="save-mood-btn" disabled class="w-full sm:w-auto px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-lg cursor-pointer disabled:bg-green-300 disabled:cursor-not-allowed transition select-none shadow-md hover:shadow-lg">Save Today's Mood</button>
+        <button id="show-calendar-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Go to Calendar</button>
+        <button id="show-analysis-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Show Analysis</button>
+    </div>
   </section>
 
-  <section id="calendar-section" aria-label="Calendar and mood overview" class="hidden flex-col gap-8 w-full max-w-xl">
+  <!--  Calendar Section -->
+  <section id="calendar-section" aria-label="Calendar and mood overview" class="hidden flex-col gap-8 w-full max-w-xl mb-10">
     <div class="calendar bg-white rounded-3xl p-7 shadow-lg select-none" role="application" aria-label="Mood calendar">
       <div class="calendar-header flex justify-between items-center mb-5">
-        <button id="prevMonthBtn" aria-label="Previous month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">&#10094;</button>
+        <button id="prevMonthBtn" aria-label="Previous month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">❮</button>
         <div class="month-year text-2xl font-extrabold text-gray-900" aria-live="polite" aria-atomic="true"></div>
-        <button id="nextMonthBtn" aria-label="Next month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">&#10095;</button>
+        <button id="nextMonthBtn" aria-label="Next month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">❯</button>
       </div>
-      <div class="weekdays grid grid-cols-7 text-gray-500 font-semibold text-sm mb-3 select-none" aria-hidden="true">
+      <div class="weekdays grid grid-cols-7 text-gray-500 font-semibold text-sm mb-3 select-none text-center" aria-hidden="true">
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
-      <div class="days grid grid-cols-7 gap-3"></div>
+      <div class="days grid grid-cols-7 gap-2 sm:gap-3"></div>
     </div>
 
-    <div class="legend bg-white rounded-xl py-4 px-6 shadow-md flex justify-between font-semibold text-gray-600 text-sm user-select-none max-w-xl mx-auto" aria-label="Mood legend">
-      <div class="legend-item flex items-center gap-3"><div class="color-box w-6 h-6 rounded-md bg-green-200"></div> Happy</div>
-      <div class="legend-item flex items-center gap-3"><div class="color-box w-6 h-6 rounded-md bg-red-200"></div> Sad</div>
-      <div class="legend-item flex items-center gap-3"><div class="color-box w-6 h-6 rounded-md bg-purple-200"></div> Angry</div>
-      <div class="legend-item flex items-center gap-3"><div class="color-box w-6 h-6 rounded-md bg-yellow-200"></div> Neutral</div>
-      <div class="legend-item flex items-center gap-3"><div class="color-box w-6 h-6 rounded-md bg-blue-200"></div> Excited</div>
+    <div class="legend bg-white rounded-xl py-4 px-6 shadow-md flex flex-wrap justify-around font-semibold text-gray-600 text-sm user-select-none max-w-xl mx-auto gap-2" aria-label="Mood legend">
+      <div class="legend-item flex items-center gap-2"><div class="color-box w-5 h-5 rounded-md bg-green-200"></div> Happy</div>
+      <div class="legend-item flex items-center gap-2"><div class="color-box w-5 h-5 rounded-md bg-red-200"></div> Sad</div>
+      <div class="legend-item flex items-center gap-2"><div class="color-box w-5 h-5 rounded-md bg-purple-200"></div> Angry</div>
+      <div class="legend-item flex items-center gap-2"><div class="color-box w-5 h-5 rounded-md bg-yellow-200"></div> Neutral</div>
+      <div class="legend-item flex items-center gap-2"><div class="color-box w-5 h-5 rounded-md bg-blue-200"></div> Excited</div>
     </div>
-
-    <div id="mood-graph-container" aria-label="Mood graph showing moods over days" class="bg-white shadow-lg rounded-3xl p-6 max-w-xl">
-      <h3 class="text-blue-600 text-xl font-extrabold mb-4 select-none">Mood Trend This Month</h3>
-      <canvas id="moodGraph" width="500" height="200" class="rounded-xl bg-white border border-gray-200 shadow-inner"></canvas>
+    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
+        <button id="reset-data-btn" aria-label="Reset all mood data" class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer shadow-lg select-none transition">Reset All Data</button>
+        <button id="back-to-input-from-calendar-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Back to Mood Input</button>
     </div>
+  </section>
 
-    <button id="reset-data-btn" aria-label="Reset all mood data" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer shadow-lg select-none transition-max-w-xl mx-auto">Reset All Data</button>
+  <!-- Analysis Section -->
+  <section id="analysis-section" aria-label="Mood Analysis" class="hidden flex-col gap-8 w-full max-w-xl mb-10 items-center">
+    <h2 class="text-3xl font-bold text-gray-700 text-center select-none my-4">Mood Analysis</h2>
+    <div id="mood-graph-container" aria-label="Mood graph showing moods over days" class="bg-white shadow-lg rounded-3xl p-4 sm:p-6 w-full">
+      <h3 class="text-blue-600 text-lg sm:text-xl font-extrabold mb-4 select-none text-center">Mood Trend This Month</h3>
+      <canvas id="moodGraph" width="400" height="300" class="rounded-xl bg-white border border-gray-200 shadow-inner w-full"></canvas>
+    </div>
+     <button id="back-to-input-from-analysis-btn" class="mt-4 px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Back to Mood Input</button>
   </section>
 
 <script src="script.js"></script>
 </body>
 </html>
-
