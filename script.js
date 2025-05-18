@@ -32,8 +32,6 @@
   const prevBtn = document.getElementById('prevMonthBtn');
   const nextBtn = document.getElementById('nextMonthBtn');
   const resetDataBtn = document.getElementById('reset-data-btn');
-  const showAnalysisBtn = document.getElementById('show-analysis-btn');
-  const moodGraphSection = document.getElementById('mood-graph-section');
   const canvas = document.getElementById('moodGraph');
   const ctx = canvas.getContext('2d');
 
@@ -53,7 +51,7 @@
     return saved ? JSON.parse(saved) : {};
   }
 
-  // Update mood buttons UI in the input section
+  // Update mood buttons selection UI
   function updateMoodButtonsInput() {
     moodButtonsInput.forEach(btn => {
       const isSelected = btn.dataset.mood === selectedMood;
@@ -89,27 +87,29 @@
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
 
+    // Previous month days
     for(let i = startDay - 1; i >= 0; i--) {
       const dayNum = daysInPrevMonth - i;
       const dayElem = document.createElement('div');
-      dayElem.className = 'day other-month';
+      dayElem.className = 'day other-month text-gray-300 text-center rounded-xl aspect-square flex items-center justify-center select-none';
       dayElem.textContent = dayNum;
       daysContainer.appendChild(dayElem);
     }
-
+    // Current month days
     for(let day = 1; day <= daysInMonth; day++) {
       const dayElem = document.createElement('div');
-      dayElem.className = 'day';
+      dayElem.className = 'day rounded-xl aspect-square flex flex-col items-center justify-center font-semibold cursor-pointer select-none relative text-gray-800';
       const date = new Date(currentYear, currentMonth, day);
       const isoDate = formatISODate(date);
       dayElem.textContent = day;
 
+      // Common Tailwind classes for today or mood will be added later
       if (
         day === today.getDate() &&
         currentMonth === today.getMonth() &&
         currentYear === today.getFullYear()
       ) {
-        dayElem.classList.add('today');
+        dayElem.classList.add('border-4', 'border-blue-500', 'shadow-lg', 'font-extrabold');
       }
 
       if (moodsData[isoDate]) {
@@ -117,7 +117,7 @@
         dayElem.classList.add(`mood-${moodVal}`);
 
         const emojiSpan = document.createElement('span');
-        emojiSpan.className = 'emoji-indicator';
+        emojiSpan.className = 'emoji-indicator absolute top-2 right-2 text-2xl select-none';
         emojiSpan.textContent = moodEmojis[moodVal];
         dayElem.appendChild(emojiSpan);
       }
@@ -140,11 +140,12 @@
       daysContainer.appendChild(dayElem);
     }
 
+    // Next month days fillers
     const totalCells = 42;
     const filledCells = startDay + daysInMonth;
     for(let i = 1; i <= totalCells - filledCells; i++) {
       const dayElem = document.createElement('div');
-      dayElem.className = 'day other-month';
+      dayElem.className = 'day other-month text-gray-300 rounded-xl aspect-square flex items-center justify-center select-none';
       dayElem.textContent = i;
       daysContainer.appendChild(dayElem);
     }
@@ -265,7 +266,6 @@
     }
   }
 
-  // Handle Go to Calendar button click
   goToCalendarBtn.addEventListener('click', () => {
     if (!selectedMood) return;
     const todayKey = formatISODate(today);
@@ -278,13 +278,11 @@
 
     calendarSection.classList.remove('hidden');
     calendarSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+
     renderCalendar();
     drawMoodGraph();
-    moodGraphSection.classList.add('hidden'); // hide graph initially
-    showAnalysisBtn.textContent = 'Show Analysis';
   });
 
-  // Month navigation buttons
   prevBtn.addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) {
@@ -305,7 +303,6 @@
     drawMoodGraph();
   });
 
-  // Reset all data button
   resetDataBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to reset all saved mood data? This cannot be undone.')) {
       moodsData = {};
@@ -319,25 +316,9 @@
 
       document.getElementById('day-input-section').scrollIntoView({behavior: 'smooth'});
       calendarSection.classList.add('hidden');
-      moodGraphSection.classList.add('hidden');
-      showAnalysisBtn.textContent = 'Show Analysis';
     }
   });
 
-  // Show Analysis button toggles graph section
-  showAnalysisBtn.addEventListener('click', () => {
-    if (moodGraphSection.classList.contains('hidden')) {
-      moodGraphSection.classList.remove('hidden');
-      showAnalysisBtn.textContent = 'Hide Analysis';
-      drawMoodGraph();
-      moodGraphSection.scrollIntoView({behavior: 'smooth', block: 'start'});
-    } else {
-      moodGraphSection.classList.add('hidden');
-      showAnalysisBtn.textContent = 'Show Analysis';
-    }
-  });
-
-  // On load, if user already entered today's mood, show calendar by default
   const todayKey = formatISODate(today);
   if (moodsData[todayKey]) {
     calendarSection.classList.remove('hidden');
