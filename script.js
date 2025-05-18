@@ -2,55 +2,146 @@
   const moodEmojis = { 1: '😔', 2: '😐', 3: '😀', 4: '🤩', 5: '😠' };
   const moodColors = { 1: '#f39083', 2: '#e3dca8', 3: '#8bc585', 4: '#8ab0e8', 5: '#cb97db' };
   const moodTextLabels = { 1: 'Sad', 2: 'Neutral', 3: 'Happy', 4: 'Excited', 5: 'Angry' };
-  let selectedMood = null, today = new Date(), currentYear = today.getFullYear(), currentMonth = today.getMonth();
-  const STORAGE_KEY = 'moodTrackerData';
+  const moodNotePrompts = {
+    '1': {placeholder: "Describe why you're feeling sad today..." },
+    '2': {placeholder: "How was your day overall?" },
+    '3': {placeholder: "Share the Happiness!" },
+    '4': {placeholder: "What's got you buzzing?" },
+    '5': {placeholder: "Vent about what made you angry..." }
+  };
+  let selectedMood = null;
+  const today = new Date(); 
+  let currentYear = today.getFullYear();
+  let currentMonth = today.getMonth();
+  const STORAGE_KEY = 'moodTrackerData'; 
   let moodsData = loadMoods();
 
   // DOM References
-  const dayInputSection = document.getElementById('day-input-section'), moodButtonsInput = document.querySelectorAll('#day-input-section .mood-btn'), 
-        saveMoodBtn = document.getElementById('save-mood-btn'), showCalendarBtn = document.getElementById('show-calendar-btn'), 
-        showAnalysisBtn = document.getElementById('show-analysis-btn'), calendarSection = document.getElementById('calendar-section'), 
-        analysisSection = document.getElementById('analysis-section'), daysContainer = document.querySelector('#calendar-section .days'), 
-        monthYearLabel = document.querySelector('#calendar-section .month-year'), prevBtn = document.getElementById('prevMonthBtn'), 
-        nextBtn = document.getElementById('nextMonthBtn'), resetDataBtn = document.getElementById('reset-data-btn'), 
-        backToInputFromCalendarBtn = document.getElementById('back-to-input-from-calendar-btn'), 
-        backToInputFromAnalysisBtn = document.getElementById('back-to-input-from-analysis-btn'), 
-        canvas = document.getElementById('moodGraph'), ctx = canvas.getContext('2d');
+  const mainAppTitle = document.getElementById('main-app-title');
+  const dayInputSection = document.getElementById('day-input-section');
+  const moodButtonsInput = document.querySelectorAll('#day-input-section .mood-btn');
+  const saveMoodBtn = document.getElementById('save-mood-btn');
+  const showCalendarBtn = document.getElementById('show-calendar-btn');
+  const showAnalysisBtn = document.getElementById('show-analysis-btn');
+  const calendarSection = document.getElementById('calendar-section');
+  const analysisSection = document.getElementById('analysis-section');
+  const daysContainer = document.querySelector('#calendar-section .days');
+  const monthYearLabel = document.querySelector('#calendar-section .month-year');
+  const prevBtn = document.getElementById('prevMonthBtn');
+  const nextBtn = document.getElementById('nextMonthBtn');
+  const resetDataBtn = document.getElementById('reset-data-btn');
+  const backToInputFromCalendarBtn = document.getElementById('back-to-input-from-calendar-btn');
+  const backToInputFromAnalysisBtn = document.getElementById('back-to-input-from-analysis-btn');
+  const canvas = document.getElementById('moodGraph');
+  const ctx = canvas.getContext('2d');
+  const noteInputContainer = document.getElementById('note-input-container');
+  const moodNoteTextarea = document.getElementById('mood-note');
+  const notePromptLabel = document.getElementById('note-prompt');
+  const calendarNoteDisplaySection = document.getElementById('calendar-note-display-section');
+  const selectedDateForNoteSpan = document.getElementById('selected-date-for-note');
+  const displayedMoodEmojiDiv = document.getElementById('displayed-mood-emoji');
+  const displayedNoteTextP = document.getElementById('displayed-note-text');
+  const noNoteMessageP = document.getElementById('no-note-message'); 
+  const noNoteRecordedMessageP = document.getElementById('no-note-recorded-message'); 
 
   function formatISODate(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+
   function saveMoods() { localStorage.setItem(STORAGE_KEY, JSON.stringify(moodsData)); }
-  function loadMoods() { const saved = localStorage.getItem(STORAGE_KEY); return saved ? JSON.parse(saved) : {}; }
-  function updateMoodButtonsInputUI() { 
+
+  function loadMoods() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            const parsedData = JSON.parse(saved);
+            for (const key in parsedData) {
+                if (typeof parsedData[key] === 'string') { 
+                    parsedData[key] = { mood: parsedData[key], note: "" };
+                }
+            }
+            return parsedData;
+        } catch (e) {
+            console.error("Error parsing moods data, resetting.", e);
+            return {};
+        }
+    }
+    return {};
+  }
+
+  function updateMoodButtonsInputUI() {
     moodButtonsInput.forEach(btn => {
       const isSelected = btn.dataset.mood === selectedMood;
-      btn.classList.toggle('border-blue-500', isSelected); btn.classList.toggle('shadow-lg', isSelected); 
+      btn.classList.toggle('border-blue-500', isSelected);
+      btn.classList.toggle('shadow-lg', isSelected);
       btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
     });
+    if (selectedMood) {
+      noteInputContainer.classList.remove('hidden');
+      const prompts = moodNotePrompts[selectedMood];
+      if (prompts) {
+        notePromptLabel.textContent = prompts.prompt;
+        moodNoteTextarea.placeholder = prompts.placeholder;
+      } else {
+        notePromptLabel.textContent = "Add a note (optional):";
+        moodNoteTextarea.placeholder = "What happened today?";
+      }
+    } else {
+      noteInputContainer.classList.add('hidden');
+      moodNoteTextarea.value = ''; 
+    }
   }
+
   function updateActionButtonsState() { saveMoodBtn.disabled = !selectedMood; }
 
   moodButtonsInput.forEach(btn => btn.addEventListener('click', () => {
     selectedMood = (selectedMood === btn.dataset.mood) ? null : btn.dataset.mood;
-    updateMoodButtonsInputUI(); updateActionButtonsState();
+    updateMoodButtonsInputUI();
+    updateActionButtonsState();
   }));
+
   saveMoodBtn.addEventListener('click', () => {
     if (!selectedMood) return;
-    const todayKey = formatISODate(today); moodsData[todayKey] = selectedMood; saveMoods();
-    alert("Today's mood has been saved!");
+    const todayKey = formatISODate(new Date()); 
+    const noteText = moodNoteTextarea.value.trim();
+
+    moodsData[todayKey] = { mood: selectedMood, note: noteText };
+    saveMoods();
+    alert("Today's mood and note have been saved!");
+
+    selectedMood = null;
+    moodNoteTextarea.value = '';
+    updateMoodButtonsInputUI();
+    updateActionButtonsState();
+
     if (!calendarSection.classList.contains('hidden')) renderCalendar();
     if (!analysisSection.classList.contains('hidden')) drawMoodGraph();
   });
+
   showCalendarBtn.addEventListener('click', () => {
-    calendarSection.classList.remove('hidden'); analysisSection.classList.add('hidden'); dayInputSection.classList.add('hidden');
-    renderCalendar(); calendarSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-  showAnalysisBtn.addEventListener('click', () => {
-    analysisSection.classList.remove('hidden'); calendarSection.classList.add('hidden'); dayInputSection.classList.add('hidden');
-    drawMoodGraph(); analysisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    mainAppTitle.classList.add('hidden');
+    calendarSection.classList.remove('hidden');
+    analysisSection.classList.add('hidden');
+    dayInputSection.classList.add('hidden');
+    calendarNoteDisplaySection.classList.add('hidden'); 
+    renderCalendar();
+    calendarSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
-  function goBackToInput() { 
-    dayInputSection.classList.remove('hidden'); calendarSection.classList.add('hidden'); analysisSection.classList.add('hidden');
+  showAnalysisBtn.addEventListener('click', () => {
+    mainAppTitle.classList.add('hidden'); 
+    analysisSection.classList.remove('hidden');
+    calendarSection.classList.add('hidden');
+    dayInputSection.classList.add('hidden');
+    calendarNoteDisplaySection.classList.add('hidden'); 
+    drawMoodGraph();
+    analysisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function goBackToInput() {
+    mainAppTitle.classList.remove('hidden'); 
+    dayInputSection.classList.remove('hidden');
+    calendarSection.classList.add('hidden');
+    analysisSection.classList.add('hidden');
+    calendarNoteDisplaySection.classList.add('hidden'); 
     dayInputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   backToInputFromCalendarBtn.addEventListener('click', goBackToInput);
@@ -61,42 +152,78 @@
     daysContainer.innerHTML = '';
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     monthYearLabel.textContent = `${firstDayOfMonth.toLocaleString('default', { month: 'long' })} ${currentYear}`;
-    const startDay = firstDayOfMonth.getDay(), daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate(), 
-          daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    const startDay = firstDayOfMonth.getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
     for (let i = startDay; i > 0; i--) {
       const dayElem = document.createElement('div');
       dayElem.className = 'day other-month text-gray-300 text-center rounded-lg sm:rounded-xl aspect-square flex items-center justify-center select-none p-1 text-xs sm:text-sm';
-      dayElem.textContent = daysInPrevMonth - i + 1; daysContainer.appendChild(dayElem);
+      dayElem.textContent = daysInPrevMonth - i + 1;
+      daysContainer.appendChild(dayElem);
     }
+
+    const todayDate = new Date(); 
+
     for (let day = 1; day <= daysInMonth; day++) {
       const dayElem = document.createElement('div');
-      dayElem.className = 'day rounded-lg sm:rounded-xl aspect-square flex flex-col items-center justify-center font-semibold cursor-pointer select-none relative text-gray-700 p-1 text-xs sm:text-sm hover:bg-gray-200 transition-colors';
-      const date = new Date(currentYear, currentMonth, day), isoDate = formatISODate(date);
+      dayElem.className = 'day rounded-lg sm:rounded-xl aspect-square flex flex-col items-center justify-center font-semibold cursor-pointer select-none relative text-gray-700 p-1 text-xs sm:text-sm hover:bg-gray-100 transition-colors'; 
+      const date = new Date(currentYear, currentMonth, day);
+      const isoDate = formatISODate(date);
       dayElem.textContent = day;
-      if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+
+      if (day === todayDate.getDate() && currentMonth === todayDate.getMonth() && currentYear === todayDate.getFullYear()) {
         dayElem.classList.add('border-2', 'sm:border-[3px]', 'border-blue-500', 'shadow-sm', 'font-bold', 'text-blue-600');
         dayElem.classList.remove('text-gray-700');
       }
-      if (moodsData[isoDate]) {
-        const moodVal = moodsData[isoDate];
-        dayElem.classList.add(`mood-${moodVal}`); dayElem.classList.remove('hover:bg-gray-200');
+
+      const dayData = moodsData[isoDate];
+      if (dayData && dayData.mood) { 
+        const moodVal = dayData.mood;
+        dayElem.classList.add(`mood-${moodVal}`);
+        dayElem.classList.remove('hover:bg-gray-100'); 
         const emojiSpan = document.createElement('span');
         emojiSpan.className = 'emoji-indicator text-base sm:text-xl select-none leading-none mt-1';
-        emojiSpan.textContent = moodEmojis[moodVal]; dayElem.appendChild(emojiSpan);
+        emojiSpan.textContent = moodEmojis[moodVal];
+        dayElem.appendChild(emojiSpan);
       }
+
       dayElem.addEventListener('click', () => {
-        if (!selectedMood) { alert('Please select a mood from the input section first to apply it to a day.'); return; }
-        if (moodsData[isoDate] === selectedMood) delete moodsData[isoDate]; else moodsData[isoDate] = selectedMood;
-        saveMoods(); renderCalendar();
-        if (!analysisSection.classList.contains('hidden')) drawMoodGraph();
+        const clickedDateData = moodsData[isoDate];
+        selectedDateForNoteSpan.textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+        if (clickedDateData && clickedDateData.mood) {
+          displayedMoodEmojiDiv.textContent = moodEmojis[clickedDateData.mood];
+          displayedMoodEmojiDiv.classList.remove('hidden');
+          noNoteMessageP.classList.add('hidden');
+
+          if (clickedDateData.note && clickedDateData.note.trim() !== "") {
+            displayedNoteTextP.textContent = clickedDateData.note;
+            displayedNoteTextP.classList.remove('hidden');
+            noNoteRecordedMessageP.classList.add('hidden');
+          } else {
+            displayedNoteTextP.classList.add('hidden');
+            noNoteRecordedMessageP.classList.remove('hidden');
+          }
+        } else {
+          displayedMoodEmojiDiv.classList.add('hidden');
+          displayedNoteTextP.classList.add('hidden');
+          noNoteRecordedMessageP.classList.add('hidden');
+          noNoteMessageP.classList.remove('hidden'); 
+        }
+        calendarNoteDisplaySection.classList.remove('hidden');
+        calendarNoteDisplaySection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
       daysContainer.appendChild(dayElem);
     }
+
     const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
     for (let i = 1; i <= totalCells - (startDay + daysInMonth); i++) {
       const dayElem = document.createElement('div');
       dayElem.className = 'day other-month text-gray-300 text-center rounded-lg sm:rounded-xl aspect-square flex items-center justify-center select-none p-1 text-xs sm:text-sm';
-      dayElem.textContent = i; daysContainer.appendChild(dayElem);
+      dayElem.textContent = i;
+      daysContainer.appendChild(dayElem);
     }
   }
 
@@ -111,21 +238,21 @@
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const moodValues = Array.from({ length: daysInMonth }, (_, day) => {
       const isoDate = formatISODate(new Date(currentYear, currentMonth, day + 1));
-      return moodsData[isoDate] ? +moodsData[isoDate] : null;
+      const dayData = moodsData[isoDate];
+      return dayData && dayData.mood ? +dayData.mood : null; 
     });
     const allDataIsNull = moodValues.every(val => val === null);
 
-    const margin = { top: 30, right: 20, bottom: 35, left: 75 }, 
+    const margin = { top: 30, right: 20, bottom: 35, left: 75 },
           chartWidth = canvas.clientWidth - margin.left - margin.right, chartHeight = canvas.clientHeight - margin.top - margin.bottom,
-          yAxisPadding = 15, xAxisPadding = 10, effectiveChartHeight = chartHeight - (2 * yAxisPadding), 
+          yAxisPadding = 15, xAxisPadding = 10, effectiveChartHeight = chartHeight - (2 * yAxisPadding),
           effectiveChartWidth = chartWidth - (2 * xAxisPadding);
 
     if (chartWidth <= 0 || chartHeight <= 0) { console.warn("MoodGraph: Overall chart dimensions are too small. Skipping draw."); return; }
-    if (effectiveChartWidth <= 0 || effectiveChartHeight <= 0) { console.warn("MoodGraph: Effective plotting area is too small after padding. Consider reducing padding or increasing canvas size."); }
+    if (effectiveChartWidth <= 0 || effectiveChartHeight <= 0) { console.warn("MoodGraph: Effective plotting area is too small after padding."); }
 
     ctx.fillStyle = 'rgba(29, 36, 44, 0.85)'; ctx.fillRect(margin.left, margin.top, chartWidth, chartHeight);
 
-    // Horizontal grid lines 
     ctx.strokeStyle = '#4A5568'; ctx.lineWidth = 0.5; ctx.beginPath();
     if (effectiveChartHeight > 0) {
       for (let i = 0; i <= 4; i++) {
@@ -134,46 +261,42 @@
       }
     }
     ctx.stroke();
-
-    // Y-axis labels
+    // Y-axis
     ctx.textBaseline = 'middle';
     if (effectiveChartHeight > 0) {
       for (let MoodVal = 1; MoodVal <= 5; MoodVal++) {
         const y = margin.top + yAxisPadding + effectiveChartHeight * ((MoodVal - 1) / 4);
         ctx.textAlign = 'right'; ctx.fillStyle = moodColors[MoodVal] || '#E2E8F0'; ctx.font = 'bold 10px Poppins, sans-serif';
         ctx.fillText(moodTextLabels[MoodVal], margin.left - 10, y);
-        ctx.textAlign = 'center'; ctx.font = '14px Arial'; ctx.fillText(moodEmojis[MoodVal], margin.left - 60, y);
+        ctx.textAlign = 'center'; ctx.font = '14px Arial'; ctx.fillText(moodEmojis[MoodVal], margin.left - 60, y); 
       }
     }
-
-    // X-axis day labels 
+    // X-axis 
     const daysCount = moodValues.length; ctx.fillStyle = '#A0AEC0'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '10px Poppins, sans-serif';
     if (daysCount > 0 && effectiveChartWidth > 0) {
-      const dayLabelWidth = ctx.measureText("31").width, minSpacing = 5, 
+      const dayLabelWidth = ctx.measureText("31").width, minSpacing = 5,
             maxXTicks = Math.max(1, Math.floor(effectiveChartWidth / (dayLabelWidth + minSpacing)));
       let xTickStep = Math.ceil(daysCount / maxXTicks); if (xTickStep < 1) xTickStep = 1;
       if (daysCount > 1 && daysCount <= Math.max(7, maxXTicks) && xTickStep > 1) xTickStep = 1;
-
+      
       const getXForDayLabel = (dayIndex) => daysCount === 1 ? margin.left + xAxisPadding + effectiveChartWidth / 2 : margin.left + xAxisPadding + (dayIndex / (daysCount - 1)) * effectiveChartWidth;
 
       for (let i = 0; i < daysCount; i++) {
-        const dayNumber = i + 1, shouldDrawTick = (dayNumber % xTickStep === 0) || (i === 0) || 
+        const dayNumber = i + 1, shouldDrawTick = (dayNumber % xTickStep === 0) || (i === 0) ||
               (i === daysCount - 1 && (dayNumber % xTickStep !== 0 || xTickStep === daysCount) && xTickStep !== 1);
         if (shouldDrawTick) ctx.fillText(dayNumber.toString(), getXForDayLabel(i), margin.top + chartHeight + 8);
       }
     }
-
-    // No data message 
+    // No data 
     if (allDataIsNull && daysCount > 0) {
       ctx.fillStyle = '#CBD5E0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 12px Poppins, sans-serif';
       ctx.fillText("No mood data for this month.", margin.left + xAxisPadding + effectiveChartWidth / 2, margin.top + yAxisPadding + effectiveChartHeight / 2);
       return;
     }
-
-    const getXForDataPoint = dayIndex => effectiveChartWidth <= 0 ? margin.left + chartWidth / 2 : 
+    // Draw mood line
+    const getXForDataPoint = dayIndex => effectiveChartWidth <= 0 ? margin.left + chartWidth / 2 :
           daysCount === 1 ? margin.left + xAxisPadding + effectiveChartWidth / 2 : margin.left + xAxisPadding + (dayIndex / (daysCount - 1)) * effectiveChartWidth;
 
-    // Draw mood line
     ctx.lineWidth = 2.2; ctx.strokeStyle = '#4299e1'; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
     const getYFromMood = mood => margin.top + yAxisPadding + effectiveChartHeight * ((mood - 1) / 4);
     let started = false;
@@ -186,9 +309,8 @@
       }
     }
     ctx.stroke();
-
-    // Draw mood emojis as data points
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '12px Arial';
+    //Emoji as data points
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '14px Arial';
     for (let i = 0; i < daysCount; i++) {
       const mood = moodValues[i];
       if (mood !== null) ctx.fillText(moodEmojis[mood], getXForDataPoint(i), getYFromMood(mood));
@@ -197,30 +319,57 @@
 
   prevBtn.addEventListener('click', () => {
     currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    calendarNoteDisplaySection.classList.add('hidden'); 
     renderCalendar(); if (!analysisSection.classList.contains('hidden')) drawMoodGraph();
   });
   nextBtn.addEventListener('click', () => {
     currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    calendarNoteDisplaySection.classList.add('hidden'); 
     renderCalendar(); if (!analysisSection.classList.contains('hidden')) drawMoodGraph();
   });
   resetDataBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to reset all saved mood data? This cannot be undone.')) {
       moodsData = {}; saveMoods();
+      selectedMood = null;
+      moodNoteTextarea.value = ''; 
+      updateMoodButtonsInputUI();
+      updateActionButtonsState();
+      calendarNoteDisplaySection.classList.add('hidden'); 
       if (!calendarSection.classList.contains('hidden')) renderCalendar();
       if (!analysisSection.classList.contains('hidden')) drawMoodGraph();
-      selectedMood = null; updateMoodButtonsInputUI(); updateActionButtonsState();
+      alert("All mood data has been reset.");
     }
   });
 
-  updateMoodButtonsInputUI(); updateActionButtonsState(); renderCalendar(); drawMoodGraph();
+  // Sample Data Initialization
+  function initializeWithSampleData() {
+    if (Object.keys(moodsData).length === 0) { 
+        const todayDt = new Date();
+        const yesterday = new Date(todayDt);
+        yesterday.setDate(todayDt.getDate() - 1);
+        const twoDaysAgo = new Date(todayDt);
+        twoDaysAgo.setDate(todayDt.getDate() - 2);
+        const threeDaysAgo = new Date(todayDt);
+        threeDaysAgo.setDate(todayDt.getDate() - 3);
+        moodsData[formatISODate(threeDaysAgo)] = { mood: '3', note: "Had a wonderful day with friends! We went to the park and enjoyed the sunshine." };
+        moodsData[formatISODate(twoDaysAgo)] = { mood: '1', note: "Feeling a bit down today. Work was quite stressful and I couldn't catch a break." };
+        moodsData[formatISODate(yesterday)] = { mood: '4', note: "Super excited! Got tickets to my favorite band's concert next month!" };
+        saveMoods(); 
+        console.log("Initialized with sample mood data.");
+    }
+  }
+  initializeWithSampleData(); 
+  updateMoodButtonsInputUI();
+  updateActionButtonsState();
+  renderCalendar(); 
 })();
 
 // Emoji Background Animation
 (() => {
   const bgCanvas = document.getElementById('emojiBackgroundCanvas');
   if (!bgCanvas) { console.error("Background canvas not found!"); return; }
-  const bgCtx = bgCanvas.getContext('2d'), backgroundEmojiChars = ['😀', '😔', '😠', '😐', '🤩', '🥳', '😴', '🤔', '🥰', '😢'], 
-        emojis = [], numberOfEmojis = 30, baseEmojiSize = 20, maxEmojiSize = 40, baseSpeed = 0.3;
+  const bgCtx = bgCanvas.getContext('2d'), backgroundEmojiChars = ['😀', '😔', '😠', '😐', '🤩', '🥳', '😴', '🤔', '🥰', '😢','🤣','😎','🤠','🤑','🤤','😉','🤯'], 
+        emojis = [], numberOfEmojis = 45, baseEmojiSize = 20, maxEmojiSize = 40, baseSpeed = 0.3;
 
   function resizeCanvas() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
 

@@ -10,7 +10,7 @@
 <body class="min-h-screen p-5 flex flex-col items-center justify-center scroll-smooth" style="background-color: #1b2735;">
   <canvas id="emojiBackgroundCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></canvas>
 
-  <h1 class="text-4xl font-extrabold text-purple-400 select-none mb-2 z-10 relative">Mood Tracker</h1>
+  <h1 id="main-app-title" class="text-4xl font-extrabold text-purple-400 select-none mb-10 z-10 relative">Mood Tracker</h1>
 
   <!-- Mood Input Section -->
   <section id="day-input-section" aria-label="Input today's mood" class="bg-gray-700 text-gray-200 flex flex-col justify-center rounded-3xl p-8 shadow-lg w-full max-w-xl mb-10 z-10 relative">
@@ -22,6 +22,14 @@
       <button class="mood-btn text-6xl border-4 border-transparent shadow-md p-2 cursor-pointer transition hover:border-blue-500 hover:shadow-lg" data-mood="2" title="Neutral" aria-pressed="false" aria-label="Neutral mood emoji 😐">😐</button>
       <button class="mood-btn text-6xl border-4 border-transparent shadow-md p-2 cursor-pointer transition hover:border-blue-500 hover:shadow-lg" data-mood="4" title="Excited" aria-pressed="false" aria-label="Excited mood emoji 🤩">🤩</button>
     </div>
+
+    <div id="note-input-container" class="mt-6 hidden w-full">
+      <label for="mood-note" id="note-prompt" class="block text-sm font-medium text-gray-300 mb-1">Add a note (optional):</label>
+      <textarea id="mood-note" name="mood-note" rows="3"
+        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-500 rounded-md bg-gray-600 text-gray-200 p-2 placeholder-gray-400"
+        placeholder="What happened today?"></textarea>
+    </div>
+
     <!-- Buttons -->
     <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
       <button id="save-mood-btn" disabled class="w-full sm:w-auto px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-lg cursor-pointer disabled:bg-green-300 disabled:cursor-not-allowed transition select-none shadow-md hover:shadow-lg">Save Today's Mood</button>
@@ -32,6 +40,7 @@
 
   <!-- Calendar Section -->
   <section id="calendar-section" aria-label="Calendar and mood overview" class="hidden flex-col gap-8 w-full max-w-xl mb-10 z-10 relative">
+    <h2 class="text-3xl font-bold text-purple-300 text-center select-none my-4">Calendar</h2> 
     <div class="calendar bg-white rounded-3xl p-7 shadow-lg select-none" role="application" aria-label="Mood calendar">
       <div class="calendar-header flex justify-between items-center mb-5">
         <button id="prevMonthBtn" aria-label="Previous month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">❮</button>
@@ -39,47 +48,32 @@
         <button id="nextMonthBtn" aria-label="Next month" class="text-3xl font-extrabold text-blue-600 hover:bg-blue-100 rounded-lg px-3 py-1 transition select-none">❯</button>
       </div>
       <div class="weekdays grid grid-cols-7 text-gray-500 font-semibold text-sm mb-3 select-none text-center" aria-hidden="true">
-        <div>Sun</div>
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
+        <div>Sun</div> <div>Mon</div> <div>Tue</div> <div>Wed</div> <div>Thu</div> <div>Fri</div> <div>Sat</div>
       </div>
       <div class="days grid grid-cols-7 gap-2 sm:gap-3"></div>
     </div>
 
-    <div class="legend bg-white rounded-xl mt-3 py-4 px-6 shadow-md flex flex-wrap justify-around font-semibold text-gray-600 text-sm user-select-none max-w-xl mx-auto gap-2" aria-label="Mood legend">
-      <div class="legend-item flex items-center gap-2">
-        <div class="color-box w-5 h-5 rounded-md bg-green-200"></div> Happy
-      </div>
-      <div class="legend-item flex items-center gap-2">
-        <div class="color-box w-5 h-5 rounded-md bg-red-200"></div> Sad
-      </div>
-      <div class="legend-item flex items-center gap-2">
-        <div class="color-box w-5 h-5 rounded-md bg-purple-200"></div> Angry
-      </div>
-      <div class="legend-item flex items-center gap-2">
-        <div class="color-box w-5 h-5 rounded-md bg-yellow-200"></div> Neutral
-      </div>
-      <div class="legend-item flex items-center gap-2">
-        <div class="color-box w-5 h-5 rounded-md bg-blue-200"></div> Excited
-      </div>
+    <div id="calendar-note-display-section" class="bg-white rounded-xl mt-4 p-5 shadow-md max-w-xl mx-auto w-full hidden">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Mood & Note for <span id="selected-date-for-note" class="text-blue-600"></span>:</h3>
+      <div id="displayed-mood-emoji" class="text-3xl mb-2"></div>
+      <p id="displayed-note-text" class="text-gray-700 whitespace-pre-wrap text-sm"></p>
+      <p id="no-note-message" class="text-gray-500 italic hidden">No mood recorded for this day.</p>
+      <p id="no-note-recorded-message" class="text-gray-500 italic hidden">No note was saved for this mood.</p>
     </div>
+
     <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
-      <button id="reset-data-btn" aria-label="Reset all mood data" class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer shadow-lg select-none transition">Reset All Data</button>
-      <button id="back-to-input-from-calendar-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Back to Mood Input</button>
+      <button id="reset-data-btn" aria-label="Reset all mood data" class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer shadow-lg select-none transition">Reset</button>
+      <button id="back-to-input-from-calendar-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg">Back </button>
     </div>
   </section>
 
-  <!-- Brush teeth reminder -->
+  <!-- Analysis Section -->
   <section id="analysis-section" aria-label="Mood Analysis" class="hidden flex-col gap-8 w-full max-w-xl mb-10 items-center z-10 relative">
-    <h2 class="text-3xl font-bold text-gray-700 text-center select-none my-4">Mood Analysis</h2>
-    <div id="mood-graph-container" aria-label="Mood graph showing moods over days" class="bg-white shadow-lg rounded-5xl p-4 w-full">
-      <canvas id="moodGraph" width="700" height="500" class="rounded-xl bg-white border border-gray-200 shadow-inner w-full"></canvas>
+    <h2 class="text-3xl font-bold text-purple-300 text-center select-none my-4">Mood Analysis</h2> 
+    <div id="mood-graph-container" aria-label="Mood graph showing moods over days" class="bg-white shadow-lg rounded-xl p-4 w-full"> 
+      <canvas id="moodGraph" width="700" height="500" class="rounded-lg bg-white border border-gray-200 shadow-inner w-full"></canvas> 
     </div>
-    <button id="back-to-input-from-analysis-btn" class="mx-auto mt-4 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg block">Back to Mood Input</button>
+    <button id="back-to-input-from-analysis-btn" class="mx-auto mt-4 px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg cursor-pointer transition select-none shadow-md hover:shadow-lg block">Back </button>
   </section>
 
   <script src="script.js"></script>
