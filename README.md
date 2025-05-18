@@ -23,13 +23,13 @@ This project was developed as a submission for the CodeCiruit Hackathon by Outli
 ## 📸 Screenshots
 
 *Main Mood Input:*
-![Mood Tracker Interface - Main Input](assets/Main.png)
+![Mood Tracker Interface - Main Input](images/Main.png)
 
 *Calendar View:*
-![Mood Tracker Interface - Calendar View](assets/Calendar.png)
+![Mood Tracker Interface - Calendar View](images/Calendar.png)
 
 *Analysis Graph:*
-![Mood Tracker Interface - Analysis Graph](assets/Graph.png)
+![Mood Tracker Interface - Analysis Graph](images/Graph.png)
 
 ## 🛠️ Tech Stack
 
@@ -41,9 +41,9 @@ This project was developed as a submission for the CodeCiruit Hackathon by Outli
 
 1.  **Live Demo:**
     You can view the live deployed version here:
-        * **GitHub Pages:** https://aksh2758.github.io/mood-tracker/
-        *   **Netlify:** https://682a0339e71c3918a07aaab0--moodtracker47.netlify.app/
-        *   **Vercel:** https://mood-tracker-eight-rho.vercel.app/
+   * **GitHub Pages:** https://aksh2758.github.io/mood-tracker/
+   *   **Netlify:** https://682a0339e71c3918a07aaab0--moodtracker47.netlify.app/
+   *   **Vercel:** https://mood-tracker-eight-rho.vercel.app/
 
 2.  **Running from Source Code:**
     *   Clone the repository: `git clone https://github.com/Aksh2758/mood-tracker.git`
