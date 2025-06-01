@@ -29,11 +29,9 @@ This project was developed as a submission for the CodeCiruit Hackathon by Outli
 ## 📸 Screenshots
 
 _Main Mood Input :_
-![Mood Tracker Interface](assets/Main1.png)
 ![Mood Tracker Interface with Note](assets/Main2.png)
 
 _Calendar View:_
-![Calendar View](assets/calendar1.png)
 ![Calendar View with Note Display](assets/calendar2.png)
 
 _Analysis Graph:_
